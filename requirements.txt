@@ -1,0 +1,4 @@
+pytest
+requests
+PyPDF2
+openpyxl

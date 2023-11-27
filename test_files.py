@@ -1,29 +1,39 @@
 import os
 from zipfile import ZipFile
-from constants import TMP_DIR
 from PyPDF2 import PdfReader
 from openpyxl import load_workbook
 
+import zipfile
+from constants import CURRENT_DIR
+from io import BytesIO
+
 def test_text():
-    tmp = os.path.join(TMP_DIR, "tmp")
+    #создаем архив
+    tmp_dir = os.path.join(CURRENT_DIR, "tmp")
+    with zipfile.ZipFile("resources/test.zip", 'w', \
+                         compression=zipfile.ZIP_STORED) as zf:
+        files = os.listdir(tmp_dir)
+        for file in files:
+            add_file = os.path.join("tmp", file)
+            zf.write(add_file)
 
-    with open(os.path.join(tmp, "text_test.txt")) as file:
-        readfile = file.read()
-        assert "You are free to use this image" in readfile, "txt-file не прошел валидацию"
 
+    zip=ZipFile("resources/test.zip","r")
 
-def test_pdf():
-    tmp = os.path.join(TMP_DIR, "tmp")
+    #проверка текстового файла
+    textdata = zip.read('tmp/text_test.txt')
+    assert "You are free to use this image" in textdata.decode(), "txt-file не прошел валидацию"
 
-    reader = PdfReader(os.path.join(tmp, "pdf_test.pdf"))
-    number_of_pdf_pages = len(reader.pages)
-    page = reader.pages[0]
+    #проверка pdf
+    pdf_file = PdfReader(BytesIO(zip.read("tmp/pdf_test.pdf")))
+    number_of_pdf_pages = len(pdf_file.pages)
+    page = pdf_file.pages[0]
     pdftext = page.extract_text()
     assert number_of_pdf_pages == 39
     assert "Права и обязанности сторон" in pdftext, "PDF-file не прошел валидацию"
 
-def test_xlsx():
-    tmp = os.path.join(TMP_DIR, "tmp")
-    workbook = load_workbook(os.path.join(tmp, "xls_test.xlsx"))
+    #проверка xlsx
+    workbook = load_workbook(BytesIO(zip.read("tmp/xls_test.xlsx")))
     sheet = workbook.active
     assert "Этапы тестирования" == sheet.cell(row=5, column=1).value, "xlsx-file не прошел валидацию"
+

@@ -8,6 +8,10 @@ from constants import CURRENT_DIR
 from io import BytesIO
 
 def test_text():
+
+    if not os.path.exists("resources"):
+        os.mkdir("resources")
+
     #создаем архив
     tmp_dir = os.path.join(CURRENT_DIR, "tmp")
     with zipfile.ZipFile("resources/test.zip", 'w', \
